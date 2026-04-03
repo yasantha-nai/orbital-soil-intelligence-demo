@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: orbital-soil-intelligence-demo
+    env: python
+    plan: starter
+    branch: main
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: GEE_PROJECT
+        sync: false
+      - key: GEE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: PL_API_KEY
+        sync: false
