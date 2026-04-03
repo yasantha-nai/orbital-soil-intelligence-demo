@@ -1,3 +1,4 @@
+import io
 import json
 import os
 from datetime import date
@@ -220,7 +221,7 @@ if run:
 result = st.session_state.analysis_result
 if result is not None:
     layers = result["layers"]
-    ts = pd.read_json(result["ts"], orient="split")
+    ts = pd.read_json(io.StringIO(result["ts"]), orient="split")
     ts["date"] = pd.to_datetime(ts["date"]) if not ts.empty else ts.get("date")
     lat_used = float(result["lat"])
     lon_used = float(result["lon"])
