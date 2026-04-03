@@ -182,6 +182,9 @@ with st.sidebar:
 
     run = st.button("Run Orbital Analysis", type="primary", use_container_width=True)
 
+if "analysis_result" not in st.session_state:
+    st.session_state.analysis_result = None
+
 
 try:
     init_gee()
@@ -204,24 +207,44 @@ if run:
     with st.spinner("Computing risk surfaces and time-series from Sentinel-2..."):
         layers = build_proxy_layers(lat, lon, radius_km, str(start), str(end), metal)
         ts = monthly_proxy_timeseries(lat, lon, radius_km, str(start), str(end), metal)
+    st.session_state.analysis_result = {
+        "layers": layers,
+        "ts": ts.to_json(date_format="iso", orient="split"),
+        "lat": lat,
+        "lon": lon,
+        "radius_km": radius_km,
+        "mode": mode,
+        "metal": metal,
+    }
 
-    m = folium.Map(location=[lat, lon], zoom_start=12, tiles="OpenStreetMap")
+result = st.session_state.analysis_result
+if result is not None:
+    layers = result["layers"]
+    ts = pd.read_json(result["ts"], orient="split")
+    ts["date"] = pd.to_datetime(ts["date"]) if not ts.empty else ts.get("date")
+    lat_used = float(result["lat"])
+    lon_used = float(result["lon"])
+    radius_used = float(result["radius_km"])
+    mode_used = result["mode"]
+    metal_used = result["metal"]
+
+    m = folium.Map(location=[lat_used, lon_used], zoom_start=12, tiles="OpenStreetMap")
     folium.TileLayer(
         tiles=layers["risk_tile"],
         attr="Google Earth Engine",
-        name=f"{metal} Risk Surface",
+        name=f"{metal_used} Risk Surface",
         overlay=True,
         control=True,
     ).add_to(m)
-    if mode != "Indirect (Canopy Stress)":
+    if mode_used != "Indirect (Canopy Stress)":
         folium.TileLayer(tiles=layers["bsi_tile"], attr="GEE", name="Bare Soil Index (Direct)", overlay=True, control=True).add_to(m)
-    if mode != "Direct (Bare Soil)":
+    if mode_used != "Direct (Bare Soil)":
         folium.TileLayer(tiles=layers["ndvi_tile"], attr="GEE", name="NDVI/Canopy (Indirect)", overlay=True, control=True).add_to(m)
     folium.TileLayer(tiles=layers["ndmi_tile"], attr="GEE", name="Moisture Proxy (NDMI)", overlay=True, control=True).add_to(m)
 
     folium.Circle(
-        [lat, lon],
-        radius=radius_km * 1000,
+        [lat_used, lon_used],
+        radius=radius_used * 1000,
         color="#00d2ff",
         fill=False,
         weight=2,
@@ -244,7 +267,7 @@ if run:
     if ts.empty:
         st.warning("No valid scenes found in this date range/AOI. Try widening the date window.")
     else:
-        fig = px.line(ts, x="date", y=["Risk", "NDVI", "NDMI", "BSI"], title=f"{metal} Proxy Timeline")
+        fig = px.line(ts, x="date", y=["Risk", "NDVI", "NDMI", "BSI"], title=f"{metal_used} Proxy Timeline")
         fig.update_layout(legend_title_text="Signal")
         st.plotly_chart(fig, use_container_width=True)
 
