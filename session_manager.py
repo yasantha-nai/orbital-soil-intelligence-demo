@@ -57,7 +57,7 @@ def save_session(
     start_date,
     end_date,
     results: dict,
-    crop_type: str = "Tea",
+    crop_type: str = "Corn/Maize",
 ) -> dict:
     """
     Persist session metadata. Returns the metadata dict that was saved.

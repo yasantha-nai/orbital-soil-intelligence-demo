@@ -94,7 +94,7 @@ with st.sidebar:
     st.divider()
 
     # Crop type
-    crop_type = st.selectbox("Crop Type", CROP_NAMES, index=0)
+    crop_type = st.selectbox("Crop Type", CROP_NAMES, index=CROP_NAMES.index("Corn/Maize"))
     crop_info = CROP_PROFILES[crop_type]
     st.caption(f"Priority metals: {', '.join(crop_info['priority_metals'])}")
 
@@ -169,7 +169,7 @@ if save_btn and st.session_state.analysis_result is not None:
         start_date=start,
         end_date=end,
         results={"df_heavy_metal": ts_df},
-        crop_type=result.get("crop_type", "Tea"),
+        crop_type=result.get("crop_type", "Corn/Maize"),
     )
     # Persist the time-series CSV
     data_dir = "data"
@@ -261,7 +261,7 @@ if result is not None:
 
     # ── Contamination context ──────────────────────────────────────────────
 
-    crop_used = result.get("crop_type", "Tea")
+    crop_used = result.get("crop_type", "Corn/Maize")
     profile = CROP_PROFILES.get(crop_used, {})
     if profile:
         with st.expander(f"📋 {crop_used} Contamination Profile"):
